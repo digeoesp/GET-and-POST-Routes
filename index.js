@@ -2,13 +2,14 @@ const express = require('express')
 const app = express()
 const expressLayouts = require('express-ejs-layouts')
 const fs = require('fs')
+const methodOverride = require('method-override')
 
 
 // MiddleWare
 // this will help us use our layout file
 app.use(expressLayouts)
 app.use(express.urlencoded({extended: false}));
-
+app.use(methodOverride('_method'))
 // for views use .ejs files
 app.set('view engine', 'ejs')
 
@@ -23,7 +24,22 @@ app.get('/dinosaurs', (req, res)=> {
     let dinos = fs.readFileSync('./dinosaurs.json')
     // take our data and put it in a more readable format
     dinos = JSON.parse(dinos)
-    console.log(dinos)
+    console.log(req.query.nameFilter)
+    let nameToFilterBy = req.query.nameFilter
+    // array method filter
+    console.log(nameToFilterBy)
+    
+    // if there is no submit of the form
+    // this will be undefined, and we will returnb all dinos
+    if (nameToFilterBy) {
+        const newFilteredArray = dinos.filter((dinosaurObj) => {
+            if (dinosaurObj.name.toLowerCase() === nameToFilterBy.toLowerCase()) {
+                return true
+            }
+        })
+        dinos = newFilteredArray
+    }
+    // console.log(dinos)
     // in our views folder render this page
     res.render('dinosaurs/index', {dinos: dinos} )
 })
@@ -48,23 +64,37 @@ app.get('/dinosaurs/:index', (req, res)=> {
 
 
 // POST route, doesn't have a view
-
 app.post('/dinosaurs', (req, res)=> {
     let dinos = fs.readFileSync('./dinosaurs.json')
     // take our data and put it in a more readable format
     dinos = JSON.parse(dinos)
-    //construct new dino with our rew.body values
-    
+    // construct a new dino with our req.body values
     const newDino = {
         name: req.body.name,
         type: req.body.type
     }
-    //updates dinos with new dino
+    // updates dinos with new dino
     dinos.push(newDino)
     fs.writeFileSync('./dinosaurs.json', JSON.stringify(dinos))
-    //get request
+
+    let lastIndex  = dinos.length -1
+    // get a request to /dinosaurs
+    res.redirect(`/dinosaurs/${lastIndex}`)
+    // this is coming from our form submit
+    // we are going to look at the req.body
+    // console.log(req.body)
+})
+
+app.delete('/dinosaurs/:idx', (req, res)=>{
+    const dinosaurs = fs.readFileSync('./dinosaurs.json')
+    const dinosaursArray = JSON.parse(dinosaurs)
+    //intermidiate variable
+    let idx = Number(req.params.idx)
+    ///remove delted dino
+    dinosaursArray.splice(idx, 1)
+    //save the array into json file
+    fs.writeFileSync('./dinosaurs.json', JSON.stringify(dinosaursArray))
     res.redirect('/dinosaurs')
-    //console.log(req.body)
 })
 
 
