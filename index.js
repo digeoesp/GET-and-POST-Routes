@@ -50,10 +50,21 @@ app.get('/dinosaurs/:index', (req, res)=> {
 // POST route, doesn't have a view
 
 app.post('/dinosaurs', (req, res)=> {
-    // this is coming from our form submit
-    // we are going to look at the req.body
-    console.log(req.body)
-
+    let dinos = fs.readFileSync('./dinosaurs.json')
+    // take our data and put it in a more readable format
+    dinos = JSON.parse(dinos)
+    //construct new dino with our rew.body values
+    
+    const newDino = {
+        name: req.body.name,
+        type: req.body.type
+    }
+    //updates dinos with new dino
+    dinos.push(newDino)
+    fs.writeFileSync('./dinosaurs.json', JSON.stringify(dinos))
+    //get request
+    res.redirect('/dinosaurs')
+    //console.log(req.body)
 })
 
 
